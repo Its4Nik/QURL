@@ -13,7 +13,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - DB_NAME=qurl
-      - FRONTEND_URL=http://localhost:3000  # Add this line
+      - FRONTEND_URL=http://localhost:4443
 
   frontend:
     build: ./frontend
@@ -21,6 +21,6 @@ services:
     ports:
       - '4443:3000'
     environment:
-      - BACKEND_URL=http://localhost:3000
+      - BACKEND_URL=http://localhost:4444
     depends_on:
       - backend
