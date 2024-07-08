@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongo:
     image: mongo
@@ -13,7 +15,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - DB_NAME=qurl
-      - FRONTEND_URL=http://localhost:4443
+      - BASE_URL=http://localhost:4443  # Add this line
 
   frontend:
     build: ./frontend
@@ -21,6 +23,6 @@ services:
     ports:
       - '4443:3000'
     environment:
-      - BACKEND_URL=http://localhost:4444
+      - REACT_APP_BACKEND_URL=http://localhost:4444  # Ensure this line is correct
     depends_on:
       - backend

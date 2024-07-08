@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const backendUrl = process.env.BACKEND_URL; // Access environment variable
+const backendUrl = process.env.REACT_APP_BACKEND_URL; // Use environment variable
 
 function App() {
   const [url, setUrl] = useState('');

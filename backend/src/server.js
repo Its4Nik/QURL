@@ -9,7 +9,7 @@ const app = express();
 const port = 3000;
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
 const dbName = process.env.DB_NAME || 'qurl';
-const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`; // Use the BASE_URL environment variable
+const baseUrl = process.env.BASE_URL || `http://localhost:${port}`; // Use the BASE_URL environment variable
 
 app.use(bodyParser.json());
 app.use(cors());
