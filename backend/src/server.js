@@ -1,17 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Add this line
+const cors = require('cors');
 const shortid = require('shortid');
 const QRCode = require('qrcode');
 const { MongoClient } = require('mongodb');
 
 const app = express();
 const port = 3000;
-const mongoUrl = 'mongodb://mongo:27017';
-const dbName = 'qurl';
+const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
+const dbName = process.env.DB_NAME || 'qurl';
+const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`; // Use the BASE_URL environment variable
 
 app.use(bodyParser.json());
-app.use(cors()); // Add this line
+app.use(cors());
 
 MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(client => {
@@ -22,7 +23,7 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     app.post('/generate', async (req, res) => {
       const { originalUrl, customSlug } = req.body;
       const slug = customSlug || shortid.generate();
-      const qrCodeUrl = `http://localhost:3000/${slug}`;
+      const qrCodeUrl = `${baseUrl}/${slug}`; // Use the BASE_URL environment variable
 
       const qrCode = await QRCode.toDataURL(qrCodeUrl);
 
@@ -51,5 +52,5 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
   .catch(error => console.error(error));
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+  console.log(`Server running at ${baseUrl}/`);
 });
