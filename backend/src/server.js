@@ -80,16 +80,34 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to fetch all stats
-    app.get('/stats', (req, res) => {
-      urlsCollection.find().toArray()
-        .then(results => {
-          logger.info('Retrieved all QR code stats');
-          res.json(results);
-        })
-        .catch(error => {
-          logger.error(`Error fetching all QR code stats: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
+    app.get('/stats', async (req, res) => {
+      try {
+        const stats = await urlsCollection.aggregate([
+          {
+            $project: {
+              slug: 1,
+              originalUrl: 1,
+              qrCode: 1,
+              views: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              weekViews: {
+                $cond: {
+                  if: { $gte: ['$updatedAt', { $subtract: [new Date(), 7 * 24 * 60 * 60 * 1000] }] },
+                  then: '$views',
+                  else: 0
+                }
+              }
+            }
+          }
+        ]).toArray();
+
+        logger.info('Retrieved all QR code stats');
+        res.json(stats);
+      } catch (error) {
+        logger.error(`Error fetching all QR code stats: ${error.message}`);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     });
 
     // Endpoint to redirect and update views
@@ -145,38 +163,6 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
         }
       } catch (error) {
         logger.error(`Error editing QR code: ${error.message}`);
-        res.status(500).json({ error: 'Internal Server Error' });
-      }
-    });
-
-    // Endpoint to fetch usage over the last 7 days
-    app.get('/usageOverLast7Days', async (req, res) => {
-      try {
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-
-        const pipeline = [
-          {
-            $match: {
-              updatedAt: { $gte: weekAgo }
-            }
-          },
-          {
-            $group: {
-              _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
-              views: { $sum: "$views" }
-            }
-          },
-          {
-            $sort: { _id: 1 }
-          }
-        ];
-
-        const result = await urlsCollection.aggregate(pipeline).toArray();
-        logger.info('Retrieved usage over last 7 days');
-        res.json(result);
-      } catch (error) {
-        logger.error(`Error fetching usage over last 7 days: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
