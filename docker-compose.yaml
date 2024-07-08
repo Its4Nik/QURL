@@ -15,7 +15,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - DB_NAME=qurl
-      - BASE_URL=http://backend:4444  # Adjusted to use port 4444
+      - BASE_URL=http://localhost:4444  # Adjusted to use port 4444
 
   frontend:
     build: ./frontend
@@ -23,6 +23,6 @@ services:
     ports:
       - '4443:3000'  # Map internal port 3000 to external port 4443
     environment:
-      - REACT_APP_BACKEND_URL=http://backend:4444  # Use the backend service name and port
+      - REACT_APP_BACKEND_URL=http://localhost:4444  # Use the backend service name and port
     depends_on:
       - backend
