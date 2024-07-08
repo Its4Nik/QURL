@@ -27,7 +27,7 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     app.post('/generate', async (req, res) => {
       const { originalUrl, customSlug } = req.body;
       const slug = customSlug || shortid.generate();
-      const qrCodeUrl = `${baseUrl}/${slug}`; // Use the BASE_URL for the QR code
+      const qrCodeUrl = `${baseUrl}/s/${slug}`; // Include /s in the QR code URL
 
       try {
         const qrCode = await QRCode.toDataURL(qrCodeUrl);
@@ -51,7 +51,7 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to fetch stats for a specific QR code
-    app.get('/stats/:slug', (req, res) => {
+    app.get('/s/:slug', (req, res) => {
       const slug = req.params.slug;
 
       urlsCollection.findOne({ slug })
@@ -84,7 +84,7 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to redirect and update views
-    app.get('/:slug', (req, res) => {
+    app.get('/s/:slug', (req, res) => {
       const slug = req.params.slug;
 
       urlsCollection.findOneAndUpdate(
@@ -105,6 +105,60 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
           logger.error(`Error fetching and updating QR code: ${error.message}`);
           res.status(500).json({ error: 'Internal Server Error' });
         });
+    });
+
+    // Endpoint to delete a QR code
+    app.delete('/s/delete/:slug', (req, res) => {
+      const slug = req.params.slug;
+
+      urlsCollection.findOneAndDelete({ slug })
+        .then(result => {
+          if (result.value) {
+            logger.info(`Deleted QR code with slug: ${slug}`);
+            res.status(204).send();
+          } else {
+            logger.warn(`QR code not found for deletion with slug: ${slug}`);
+            res.status(404).send('Not Found');
+          }
+        })
+        .catch(error => {
+          logger.error(`Error deleting QR code: ${error.message}`);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // Endpoint to edit the original URL of a QR code
+    app.put('/s/edit/:slug', async (req, res) => {
+      const slug = req.params.slug;
+      const { originalUrl } = req.body;
+
+      try {
+        const qrCodeUrl = `${baseUrl}/s/${slug}`;
+        const qrCode = await QRCode.toDataURL(qrCodeUrl);
+
+        const updatedData = {
+          originalUrl,
+          qrCode,
+          updatedAt: new Date()
+        };
+
+        const result = await urlsCollection.findOneAndUpdate(
+          { slug },
+          { $set: updatedData },
+          { returnDocument: 'after' }
+        );
+
+        if (result.value) {
+          logger.info(`Edited QR code with slug: ${slug}`);
+          res.json(result.value);
+        } else {
+          logger.warn(`QR code not found for edit with slug: ${slug}`);
+          res.status(404).send('Not Found');
+        }
+      } catch (error) {
+        logger.error(`Error editing QR code: ${error.message}`);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     });
 
     // Default endpoint handling
