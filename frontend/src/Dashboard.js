@@ -7,12 +7,12 @@ function Dashboard() {
   const [qrCodes, setQrCodes] = useState([]);
 
   useEffect(() => {
-    axios.get(`${backendUrl}/stats`)
+    axios.get(`${backendUrl}/stats`)  // Make sure the endpoint path is correct
       .then(response => {
         setQrCodes(response.data);
       })
       .catch(error => {
-        console.error(error);
+        console.error('Error fetching QR codes:', error);
       });
   }, []);
 
