@@ -95,8 +95,6 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     // Endpoint to redirect and update views
     // Update the /s/:slug endpoint to handle redirection after updating views
 
-
-
     // Endpoint to delete a QR code
     app.delete('/s/delete/:slug', (req, res) => {
       const slug = req.params.slug;
@@ -147,6 +145,38 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
         }
       } catch (error) {
         logger.error(`Error editing QR code: ${error.message}`);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });
+
+    // Endpoint to fetch usage over the last 7 days
+    app.get('/usageOverLast7Days', async (req, res) => {
+      try {
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const pipeline = [
+          {
+            $match: {
+              updatedAt: { $gte: weekAgo }
+            }
+          },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
+              views: { $sum: "$views" }
+            }
+          },
+          {
+            $sort: { _id: 1 }
+          }
+        ];
+
+        const result = await urlsCollection.aggregate(pipeline).toArray();
+        logger.info('Retrieved usage over last 7 days');
+        res.json(result);
+      } catch (error) {
+        logger.error(`Error fetching usage over last 7 days: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
