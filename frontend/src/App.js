@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 import Dashboard from './Dashboard'; // Import the Dashboard component
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 function App() {
   const [url, setUrl] = useState('');
@@ -16,7 +16,7 @@ function App() {
         setQrCode(response.data.qrCode);
       })
       .catch(error => {
-        console.error(error);
+        console.error('Error generating QR code:', error);
       });
   };
 

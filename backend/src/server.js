@@ -6,13 +6,26 @@ const cors = require('cors');
 const shortid = require('shortid');
 const QRCode = require('qrcode');
 const { MongoClient } = require('mongodb');
-const logger = require('./logger');  // Import Winston logger module
+const winston = require('winston');  // Import Winston logger module
 
 const app = express();
 const port = 3000;  // Internal port remains 3000
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
 const dbName = process.env.DB_NAME || 'qurl';
 const baseUrl = process.env.BASE_URL || `http://localhost:3000`;
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'combined.log' })
+  ],
+});
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -27,7 +40,7 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     app.post('/generate', async (req, res) => {
       const { originalUrl, customSlug } = req.body;
       const slug = customSlug || shortid.generate();
-      const qrCodeUrl = `${baseUrl}/s/${slug}`; // Include /s in the QR code URL
+      const qrCodeUrl = `${baseUrl}/s/${slug}`; // Use the updated BASE_URL for the QR code
 
       try {
         const qrCode = await QRCode.toDataURL(qrCodeUrl);
@@ -51,30 +64,20 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to fetch stats for a specific QR code
-    app.get('/s/:slug', async (req, res) => {
+    app.get('/stats/:slug', async (req, res) => {
       const slug = req.params.slug;
-    
+
       try {
-        logger.info(`Attempting to find QR code for slug: ${slug}`);
-    
-        const result = await urlsCollection.findOneAndUpdate(
-          { slug },
-          { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
-          { returnDocument: 'after' }
-        );
-    
-        if (result.value) {
-          const originalUrl = result.value.originalUrl;
-          logger.info(`Found QR code for slug: ${slug}. Redirecting to: ${originalUrl}`);
-    
-          // Perform the redirection
-          res.redirect(301, originalUrl); // Use 301 for permanent redirect if appropriate
+        const result = await urlsCollection.findOne({ slug });
+        if (result) {
+          logger.info(`Retrieved stats for QR code slug: ${slug}`);
+          res.json(result);
         } else {
-          logger.warn(`QR code not found for slug: ${slug}`);
+          logger.warn(`QR code stats not found for slug: ${slug}`);
           res.status(404).send('Not Found');
         }
       } catch (error) {
-        logger.error(`Error fetching and updating QR code for slug ${slug}: ${error.message}`);
+        logger.error(`Error fetching QR code stats: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
@@ -82,28 +85,9 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     // Endpoint to fetch all stats
     app.get('/stats', async (req, res) => {
       try {
-        const stats = await urlsCollection.aggregate([
-          {
-            $project: {
-              slug: 1,
-              originalUrl: 1,
-              qrCode: 1,
-              views: 1,
-              createdAt: 1,
-              updatedAt: 1,
-              weekViews: {
-                $cond: {
-                  if: { $gte: ['$updatedAt', { $subtract: [new Date(), 7 * 24 * 60 * 60 * 1000] }] },
-                  then: '$views',
-                  else: 0
-                }
-              }
-            }
-          }
-        ]).toArray();
-
+        const results = await urlsCollection.find().toArray();
         logger.info('Retrieved all QR code stats');
-        res.json(stats);
+        res.json(results);
       } catch (error) {
         logger.error(`Error fetching all QR code stats: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -111,58 +95,28 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to redirect and update views
-    // Update the /s/:slug endpoint to handle redirection after updating views
-
-    // Endpoint to delete a QR code
-    app.delete('/s/delete/:slug', (req, res) => {
+    app.get('/s/:slug', async (req, res) => {
       const slug = req.params.slug;
-
-      urlsCollection.findOneAndDelete({ slug })
-        .then(result => {
-          if (result.value) {
-            logger.info(`Deleted QR code with slug: ${slug}`);
-            res.status(204).send();
-          } else {
-            logger.warn(`QR code not found for deletion with slug: ${slug}`);
-            res.status(404).send('Not Found');
-          }
-        })
-        .catch(error => {
-          logger.error(`Error deleting QR code: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
-    });
-
-    // Endpoint to edit the original URL of a QR code
-    app.put('/s/edit/:slug', async (req, res) => {
-      const slug = req.params.slug;
-      const { originalUrl } = req.body;
 
       try {
-        const qrCodeUrl = `${baseUrl}/s/${slug}`;
-        const qrCode = await QRCode.toDataURL(qrCodeUrl);
-
-        const updatedData = {
-          originalUrl,
-          qrCode,
-          updatedAt: new Date()
-        };
+        logger.info(`Attempting to find QR code for slug: ${slug}`);
 
         const result = await urlsCollection.findOneAndUpdate(
           { slug },
-          { $set: updatedData },
+          { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
           { returnDocument: 'after' }
         );
 
         if (result.value) {
-          logger.info(`Edited QR code with slug: ${slug}`);
-          res.json(result.value);
+          const originalUrl = result.value.originalUrl;
+          logger.info(`Found QR code for slug: ${slug}. Redirecting to: ${originalUrl}`);
+          res.redirect(301, originalUrl); // Use 301 for permanent redirect if appropriate
         } else {
-          logger.warn(`QR code not found for edit with slug: ${slug}`);
+          logger.warn(`QR code not found for slug: ${slug}`);
           res.status(404).send('Not Found');
         }
       } catch (error) {
-        logger.error(`Error editing QR code: ${error.message}`);
+        logger.error(`Error fetching and updating QR code for slug ${slug}: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
@@ -181,3 +135,4 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
 app.listen(port, () => {
   logger.info(`Server running at ${baseUrl}/`);
 });
+
