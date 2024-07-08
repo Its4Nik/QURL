@@ -2,7 +2,6 @@
   "name": "qurl-backend",
   "version": "1.0.0",
   "description": "Backend for QURL - QR Code Generator",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
