@@ -84,28 +84,30 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to redirect and update views
-    app.get('/s/:slug', (req, res) => {
-      const slug = req.params.slug;
+    // Update the /s/:slug endpoint to handle redirection after updating views
+app.get('/s/:slug', async (req, res) => {
+  const slug = req.params.slug;
 
-      urlsCollection.findOneAndUpdate(
-        { slug },
-        { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
-        { returnDocument: 'after' }
-      )
-        .then(result => {
-          if (result.value) {
-            logger.info(`Redirecting to: ${result.value.originalUrl}`);
-            res.redirect(result.value.originalUrl);
-          } else {
-            logger.warn(`QR code not found for slug: ${slug}`);
-            res.status(404).send('Not Found');
-          }
-        })
-        .catch(error => {
-          logger.error(`Error fetching and updating QR code: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
-    });
+  try {
+    const result = await urlsCollection.findOneAndUpdate(
+      { slug },
+      { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    );
+
+    if (result.value) {
+      logger.info(`Redirecting to: ${result.value.originalUrl}`);
+      res.redirect(result.value.originalUrl);
+    } else {
+      logger.warn(`QR code not found for slug: ${slug}`);
+      res.status(404).send('Not Found');
+    }
+  } catch (error) {
+    logger.error(`Error fetching and updating QR code: ${error.message}`);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
     // Endpoint to delete a QR code
     app.delete('/s/delete/:slug', (req, res) => {
