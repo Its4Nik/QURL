@@ -50,30 +50,6 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
       }
     });
 
-    // Endpoint to redirect and update views
-    app.get('/:slug', (req, res) => {
-      const slug = req.params.slug;
-
-      urlsCollection.findOneAndUpdate(
-        { slug },
-        { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
-        { returnDocument: 'after' }
-      )
-        .then(result => {
-          if (result.value) {
-            logger.info(`Redirecting to: ${result.value.originalUrl}`);
-            res.redirect(result.value.originalUrl);
-          } else {
-            logger.warn(`QR code not found for slug: ${slug}`);
-            res.status(404).send('Not Found');
-          }
-        })
-        .catch(error => {
-          logger.error(`Error fetching and updating QR code: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
-    });
-
     // Endpoint to fetch stats for a specific QR code
     app.get('/stats/:slug', (req, res) => {
       const slug = req.params.slug;
@@ -103,6 +79,30 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
         })
         .catch(error => {
           logger.error(`Error fetching all QR code stats: ${error.message}`);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // Endpoint to redirect and update views
+    app.get('/:slug', (req, res) => {
+      const slug = req.params.slug;
+
+      urlsCollection.findOneAndUpdate(
+        { slug },
+        { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
+        { returnDocument: 'after' }
+      )
+        .then(result => {
+          if (result.value) {
+            logger.info(`Redirecting to: ${result.value.originalUrl}`);
+            res.redirect(result.value.originalUrl);
+          } else {
+            logger.warn(`QR code not found for slug: ${slug}`);
+            res.status(404).send('Not Found');
+          }
+        })
+        .catch(error => {
+          logger.error(`Error fetching and updating QR code: ${error.message}`);
           res.status(500).json({ error: 'Internal Server Error' });
         });
     });
