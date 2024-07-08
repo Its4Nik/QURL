@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 
 function Dashboard() {
   const [qrCodes, setQrCodes] = useState([]);
+  const [editSlug, setEditSlug] = useState('');
+  const [editUrl, setEditUrl] = useState('');
 
   useEffect(() => {
-    fetchQRCodeList();
+    fetchQrCodes();
   }, []);
 
-  const fetchQRCodeList = async () => {
+  const fetchQrCodes = async () => {
     try {
       const response = await axios.get(`${backendUrl}/stats`);
       setQrCodes(response.data);
@@ -21,19 +23,26 @@ function Dashboard() {
 
   const handleDelete = async (slug) => {
     try {
-      await axios.delete(`${backendUrl}/s/delete/${slug}`);
-      fetchQRCodeList(); // Refresh the QR code list after deletion
+      await axios.delete(`${backendUrl}/delete/${slug}`);
+      setQrCodes(qrCodes.filter(qrCode => qrCode.slug !== slug));
     } catch (error) {
       console.error('Error deleting QR code:', error);
     }
   };
 
-  const handleEdit = async (slug, newUrl) => {
+  const handleEdit = (slug, originalUrl) => {
+    setEditSlug(slug);
+    setEditUrl(originalUrl);
+  };
+
+  const updateUrl = async () => {
     try {
-      await axios.put(`${backendUrl}/s/edit/${slug}`, { originalUrl: newUrl });
-      fetchQRCodeList(); // Refresh the QR code list after editing
+      await axios.put(`${backendUrl}/edit/${editSlug}`, { originalUrl: editUrl });
+      setEditSlug('');
+      setEditUrl('');
+      fetchQrCodes(); // Fetch updated list after edit
     } catch (error) {
-      console.error('Error editing QR code:', error);
+      console.error('Error updating URL:', error);
     }
   };
 
@@ -49,26 +58,38 @@ function Dashboard() {
             <th>Views</th>
             <th>Created At</th>
             <th>Updated At</th>
-            <th>Actions</th> {/* New column for actions */}
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {qrCodes.map((qrCode, index) => (
             <tr key={index}>
               <td>{qrCode.slug}</td>
-              <td>{qrCode.originalUrl}</td>
+              <td>
+                {editSlug === qrCode.slug ? (
+                  <input 
+                    type="text" 
+                    value={editUrl} 
+                    onChange={(e) => setEditUrl(e.target.value)} 
+                  />
+                ) : (
+                  qrCode.originalUrl
+                )}
+              </td>
               <td><img src={qrCode.qrCode} alt="QR Code" style={{ width: '50px' }} /></td>
               <td>{qrCode.views}</td>
               <td>{new Date(qrCode.createdAt).toLocaleString()}</td>
               <td>{new Date(qrCode.updatedAt).toLocaleString()}</td>
               <td>
-                <button onClick={() => handleDelete(qrCode.slug)}>Delete</button>
-                <button onClick={() => {
-                  const newUrl = prompt('Enter the new URL:');
-                  if (newUrl) {
-                    handleEdit(qrCode.slug, newUrl);
-                  }
-                }}>Edit</button>
+                {editSlug === qrCode.slug ? (
+                  <button onClick={updateUrl}>Save</button>
+                ) : (
+                  <>
+                    <button onClick={() => window.open(`${backendUrl}/s/${qrCode.slug}`, '_blank')}>Visit Link</button>
+                    <button onClick={() => handleEdit(qrCode.slug, qrCode.originalUrl)}>Edit</button>
+                    <button onClick={() => handleDelete(qrCode.slug)}>Delete</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
