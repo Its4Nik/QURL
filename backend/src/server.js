@@ -87,23 +87,28 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     // Update the /s/:slug endpoint to handle redirection after updating views
     app.get('/s/:slug', async (req, res) => {
       const slug = req.params.slug;
-
+    
       try {
+        logger.info(`Attempting to find QR code for slug: ${slug}`);
+    
         const result = await urlsCollection.findOneAndUpdate(
           { slug },
           { $inc: { views: 1 }, $set: { updatedAt: new Date() } },
           { returnDocument: 'after' }
         );
-
+    
         if (result.value) {
-          logger.info(`Redirecting to: ${result.value.originalUrl}`);
-          res.redirect(301, result.value.originalUrl); // Use 301 for permanent redirect if appropriate
+          const originalUrl = result.value.originalUrl;
+          logger.info(`Found QR code for slug: ${slug}. Redirecting to: ${originalUrl}`);
+    
+          // Perform the redirection
+          res.redirect(301, originalUrl); // Use 301 for permanent redirect if appropriate
         } else {
           logger.warn(`QR code not found for slug: ${slug}`);
           res.status(404).send('Not Found');
         }
       } catch (error) {
-        logger.error(`Error fetching and updating QR code: ${error.message}`);
+        logger.error(`Error fetching and updating QR code for slug ${slug}: ${error.message}`);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
