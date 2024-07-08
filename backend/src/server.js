@@ -52,5 +52,5 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
   .catch(error => console.error(error));
 
 app.listen(port, () => {
-  console.log(`Server running at ${baseUrl}/`);
+  console.log(`Server running at http://localhost:${port}`);
 });
