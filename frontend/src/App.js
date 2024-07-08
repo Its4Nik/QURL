@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import Dashboard from './Dashboard'; // Import the Dashboard component
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL; // Use environment variable
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
   const [url, setUrl] = useState('');
@@ -36,6 +37,9 @@ function App() {
       />
       <button onClick={generateQrCode}>Generate QR Code</button>
       {qrCode && <img src={qrCode} alt="QR Code" />}
+      
+      <h2>Dashboard</h2>
+      <Dashboard /> {/* Add the Dashboard component */}
     </div>
   );
 }

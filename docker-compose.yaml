@@ -15,7 +15,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - DB_NAME=qurl
-      - BASE_URL=http://localhost:4443  # Add this line
+      - BASE_URL=http://localhost:4443  # Make sure this is the backend URL
 
   frontend:
     build: ./frontend
