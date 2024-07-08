@@ -37,6 +37,10 @@ function Dashboard() {
     }
   };
 
+  const handleVisit = (slug) => {
+    window.open(`${backendUrl}/s/${slug}`, '_blank');
+  };
+
   return (
     <div>
       <h1>QR Code Dashboard</h1>
@@ -49,7 +53,7 @@ function Dashboard() {
             <th>Views</th>
             <th>Created At</th>
             <th>Updated At</th>
-            <th>Actions</th> {/* New column for actions */}
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -69,6 +73,7 @@ function Dashboard() {
                     handleEdit(qrCode.slug, newUrl);
                   }
                 }}>Edit</button>
+                <button onClick={() => handleVisit(qrCode.slug)}>Visit</button>
               </td>
             </tr>
           ))}
