@@ -6,10 +6,10 @@ const QRCode = require('qrcode');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-const port = 3000;
+const port = 3000;  // Internal port remains 3000
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
 const dbName = process.env.DB_NAME || 'qurl';
-const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+const baseUrl = process.env.BASE_URL || `http://localhost:3000`;
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -85,6 +85,11 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
           res.json(results);
         })
         .catch(error => console.error(error));
+    });
+
+    // Default endpoint handling
+    app.get('/', (req, res) => {
+      res.send('Backend is running');
     });
 
   })

@@ -7,7 +7,7 @@ function Dashboard() {
   const [qrCodes, setQrCodes] = useState([]);
 
   useEffect(() => {
-    axios.get(`${backendUrl}/stats`)  // Make sure the endpoint path is correct
+    axios.get(`${backendUrl}/stats`)
       .then(response => {
         setQrCodes(response.data);
       })
