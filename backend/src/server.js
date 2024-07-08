@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors'); // Add this line
 const shortid = require('shortid');
 const QRCode = require('qrcode');
 const { MongoClient } = require('mongodb');
@@ -10,6 +11,7 @@ const mongoUrl = 'mongodb://mongo:27017';
 const dbName = 'qurl';
 
 app.use(bodyParser.json());
+app.use(cors()); // Add this line
 
 MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(client => {

@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
+const backendUrl = 'http://localhost:3000'; // Define backend URL
+
 function App() {
   const [url, setUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [qrCode, setQrCode] = useState(null);
 
   const generateQrCode = () => {
-    axios.post('http://localhost:3000/generate', { originalUrl: url, customSlug })
+    axios.post(`${backendUrl}/generate`, { originalUrl: url, customSlug })
       .then(response => {
         setQrCode(response.data.qrCode);
       })
