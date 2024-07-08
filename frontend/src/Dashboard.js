@@ -7,14 +7,35 @@ function Dashboard() {
   const [qrCodes, setQrCodes] = useState([]);
 
   useEffect(() => {
-    axios.get(`${backendUrl}/stats`)
-      .then(response => {
-        setQrCodes(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching QR codes:', error);
-      });
+    fetchQRCodeList();
   }, []);
+
+  const fetchQRCodeList = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/stats`);
+      setQrCodes(response.data);
+    } catch (error) {
+      console.error('Error fetching QR codes:', error);
+    }
+  };
+
+  const handleDelete = async (slug) => {
+    try {
+      await axios.delete(`${backendUrl}/s/delete/${slug}`);
+      fetchQRCodeList(); // Refresh the QR code list after deletion
+    } catch (error) {
+      console.error('Error deleting QR code:', error);
+    }
+  };
+
+  const handleEdit = async (slug, newUrl) => {
+    try {
+      await axios.put(`${backendUrl}/s/edit/${slug}`, { originalUrl: newUrl });
+      fetchQRCodeList(); // Refresh the QR code list after editing
+    } catch (error) {
+      console.error('Error editing QR code:', error);
+    }
+  };
 
   return (
     <div>
@@ -28,6 +49,7 @@ function Dashboard() {
             <th>Views</th>
             <th>Created At</th>
             <th>Updated At</th>
+            <th>Actions</th> {/* New column for actions */}
           </tr>
         </thead>
         <tbody>
@@ -39,6 +61,15 @@ function Dashboard() {
               <td>{qrCode.views}</td>
               <td>{new Date(qrCode.createdAt).toLocaleString()}</td>
               <td>{new Date(qrCode.updatedAt).toLocaleString()}</td>
+              <td>
+                <button onClick={() => handleDelete(qrCode.slug)}>Delete</button>
+                <button onClick={() => {
+                  const newUrl = prompt('Enter the new URL:');
+                  if (newUrl) {
+                    handleEdit(qrCode.slug, newUrl);
+                  }
+                }}>Edit</button>
+              </td>
             </tr>
           ))}
         </tbody>
