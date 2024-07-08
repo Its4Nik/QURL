@@ -51,40 +51,6 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
     });
 
     // Endpoint to fetch stats for a specific QR code
-    app.get('/s/:slug', (req, res) => {
-      const slug = req.params.slug;
-
-      urlsCollection.findOne({ slug })
-        .then(result => {
-          if (result) {
-            logger.info(`Retrieved stats for QR code slug: ${slug}`);
-            res.json(result);
-          } else {
-            logger.warn(`QR code stats not found for slug: ${slug}`);
-            res.status(404).send('Not Found');
-          }
-        })
-        .catch(error => {
-          logger.error(`Error fetching QR code stats: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
-    });
-
-    // Endpoint to fetch all stats
-    app.get('/stats', (req, res) => {
-      urlsCollection.find().toArray()
-        .then(results => {
-          logger.info('Retrieved all QR code stats');
-          res.json(results);
-        })
-        .catch(error => {
-          logger.error(`Error fetching all QR code stats: ${error.message}`);
-          res.status(500).json({ error: 'Internal Server Error' });
-        });
-    });
-
-    // Endpoint to redirect and update views
-    // Update the /s/:slug endpoint to handle redirection after updating views
     app.get('/s/:slug', async (req, res) => {
       const slug = req.params.slug;
     
@@ -112,6 +78,22 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
+
+    // Endpoint to fetch all stats
+    app.get('/stats', (req, res) => {
+      urlsCollection.find().toArray()
+        .then(results => {
+          logger.info('Retrieved all QR code stats');
+          res.json(results);
+        })
+        .catch(error => {
+          logger.error(`Error fetching all QR code stats: ${error.message}`);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // Endpoint to redirect and update views
+    // Update the /s/:slug endpoint to handle redirection after updating views
 
 
 
