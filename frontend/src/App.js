@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const backendUrl = 'http://localhost:3000'; // Define backend URL
+const backendUrl = 'http://localhost:4444'; // Define backend URL
 
 function App() {
   const [url, setUrl] = useState('');
