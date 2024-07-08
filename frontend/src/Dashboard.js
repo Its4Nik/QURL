@@ -23,7 +23,7 @@ function Dashboard() {
 
   const handleDelete = async (slug) => {
     try {
-      await axios.delete(`${backendUrl}/delete/${slug}`);
+      await axios.delete(`${backendUrl}/s/delete/${slug}`);
       setQrCodes(qrCodes.filter(qrCode => qrCode.slug !== slug));
     } catch (error) {
       console.error('Error deleting QR code:', error);
