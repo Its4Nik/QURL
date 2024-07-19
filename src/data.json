@@ -1,0 +1,21 @@
+{
+    "links": [
+        {
+            "slug": "arthurIstCool",
+            "destination": "https://google.com",
+            "clicks": 52,
+            "visit_count": {
+                "2024-07-18": 52
+            },
+            "browsers": {
+                "Chrome": 52
+            },
+            "platforms": {
+                "Windows": 52
+            },
+            "user_agents": {
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36": 52
+            }
+        }
+    ]
+}
