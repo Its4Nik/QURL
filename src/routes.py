@@ -1,13 +1,14 @@
-import json
+import xml.etree.ElementTree as ET
+import qrcode.image.svg
+import datetime
 import random
 import string
-import datetime
 import qrcode
-import qrcode.image.svg
-from flask import  request, redirect, render_template, send_file, abort
-import xml.etree.ElementTree as ET
-from user_agents import parse
+import json
 import os
+from flask import  request, redirect, render_template, send_file, abort
+from user_agents import parse
+
 
 DATABASE = 'data.json'
 
@@ -27,7 +28,18 @@ def index():
 def create_link():
     destination = request.form['destination']
     custom_slug = request.form.get('slug')
-    slug = custom_slug if custom_slug else ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+    data = load_data()
+
+    # Generate a unique slug
+    if custom_slug:
+        slug = custom_slug
+        if any(link['slug'] == slug for link in data['links']):
+            return redirect('/')
+    else:
+        slug = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        while any(link['slug'] == slug for link in data['links']):
+            slug = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
     new_link = {
         "slug": slug,
         "destination": destination,
@@ -37,7 +49,7 @@ def create_link():
         "platforms": {},
         "user_agents": {}
     }
-    data = load_data()
+
     data['links'].append(new_link)
     save_data(data)
     return redirect('/')
@@ -123,3 +135,16 @@ def save_qr_code_to_file(slug):
 def qr_code(slug):
     file_path = save_qr_code_to_file(slug)
     return send_file(file_path, mimetype='image/svg+xml')
+
+def delete(slug):
+    data = load_data()
+
+    link = next((l for l in data['links'] if l['slug'] == slug), None)
+    
+    if not link:
+        abort(404)
+
+    data['links'] = [l for l in data['links'] if l['slug'] != slug]
+    save_data(data)
+
+    return redirect('/')

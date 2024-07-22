@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html lang="en" xml:lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Linktree Clone</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QURL</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
@@ -12,24 +18,33 @@
         <h1>Create a new link</h1>
         <form method="POST" action="/create">
             <label for="destination">Destination URL:</label>
-            <input type="text" id="destination" name="destination" required>
+            <input class="input-form" type="text" id="destination" name="destination" required>
             <label for="slug">Custom Slug (optional):</label>
-            <input type="text" id="slug" name="slug">
-            <button type="submit">Create</button>
+            <input class="input-form" type="text" id="slug" name="slug">
+            <button class="edit" type="submit">Create</button>
         </form>
 
         <h1>Existing Links</h1>
         <ul>
             {% for link in links %}
-            <li>
-                <a href="/s/{{ link.slug }}" target="_blank">/{{ link.slug }}</a> 🌐 {{ link.destination }}
+            <li style="display: flex; align-items: center; margin-bottom: 10px;">
+                <a href="/s/{{ link.slug }}" target="_blank">{{ link.slug }}</a> 🌐 {{ link.destination }}
                 ({{ link.clicks }} clicks)
-                <form method="POST" action="/edit/{{ link.slug }}" style="display:inline;">
-                    <label for="destination">New Destination:</label>
-                    <input type="text" id="destination" name="destination" required>
-                    <button type="submit">Save</button>
-                </form>
-                <img src="{{ url_for('qr_code', slug=link.slug) }}" alt="QR Code" style="width: 100px; height: 100px;">
+                <div style="display: flex; align-items: center; margin-left: 10px;">
+                    <form method="POST" action="/edit/{{ link.slug }}"
+                        style="display: flex; align-items: center; margin-right: 10px;">
+                        <input type="text" id="destination" name="destination" placeholder="New Destination" required
+                            style="margin-right: 10px;">
+                        <button class="edit" type="submit">Save</button>
+                    </form>
+                    <form method="post" action="/delete/{{ link.slug }}" style="display: flex; align-items: center;">
+                        <button class="delete" type="submit">Delete</button>
+                    </form>
+                </div>
+                <a href="{{ url_for('qr_code', slug=link.slug) }}" style="margin-left: 10px;">
+                    <img src="{{ url_for('qr_code', slug=link.slug) }}" alt="QR Code"
+                        style="width: 100px; height: 100px;">
+                </a>
             </li>
             {% endfor %}
         </ul>

@@ -1,7 +1,3 @@
 Flask
-Flask-SQLAlchemy
-Flask-Migrate
-user-agents
-datetime
 qrcode
-user_agents
+user-agents
