@@ -1,0 +1,16 @@
+{
+  "name": "qurl",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/qrcode": "^1.5.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
