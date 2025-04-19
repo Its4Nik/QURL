@@ -1,2 +1,6 @@
-public/qr/*
+node_modules
+.env
+.editorconfig
+.idea
+coverage*
 *.db
