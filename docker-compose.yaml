@@ -1,0 +1,6 @@
+services:
+  qurl:
+    container_name: QURL
+    ports:
+      - 3000:3000 # Host Port : Container Port
+    image: ghcr.io/its4nik/qurl

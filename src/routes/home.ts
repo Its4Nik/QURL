@@ -6,6 +6,9 @@ export const handleHome = () => {
   return new Response(
     `<html>
       <head>
+        <title>QURL - ${rows.length} URLs</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         * {
           margin: 0;
@@ -146,6 +149,17 @@ export const handleHome = () => {
             width: 100%;
           }
         }
+
+        .delete-btn {
+          background: linear-gradient(135deg, #ff7d7d, #ff5e5e);
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+        }
+
+        .delete-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(255, 125, 125, 0.3);
+        }
       </style>
       </head>
       <body>
@@ -157,14 +171,15 @@ export const handleHome = () => {
 
         <h2>All Shortened Links</h2>
         <table>
-          <thead>
-            <tr>
-              <th>Short URL</th>
-              <th>Original URL</th>
-              <th>Visits</th>
-              <th>QR Code</th>
-            </tr>
-          </thead>
+        <thead>
+          <tr>
+            <th>Short URL</th>
+            <th>Original URL</th>
+            <th>Visits</th>
+            <th>QR Code</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
           <tbody>
             ${rows
               .map(
@@ -180,12 +195,24 @@ export const handleHome = () => {
                     <img src="/qr/${row.code}.png" class="qr-thumb">
                   </a>
                 </td>
+                <td>
+                  <button class="delete-btn" onclick="deleteCode('${row.code}')">Delete</button>
+                </td>
               </tr>
             `,
               )
               .join("")}
           </tbody>
         </table>
+        <script>
+          function deleteCode(code) {
+            if (confirm('Delete this short URL?')) {
+              fetch('/delete/' + code, { method: 'DELETE' })
+                .then(response => response.ok && location.reload())
+                .catch(console.error);
+            }
+          }
+        </script>
       </body>
     </html>`,
     { headers: { "Content-Type": "text/html" } },
